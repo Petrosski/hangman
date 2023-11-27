@@ -1,12 +1,30 @@
 import time
 import random
-import requests
 import telebot
 from telebot import types
 
-API_KEY = "6967238258:AAHjjSaAEWAFs-qFs_u7L_Jj-y85Yvyve6I"
+def ler_api_key():
+    with open('token.txt', 'r') as arquivo:
+        return arquivo.read().strip()
 
-# Initializing all the conditions required for the game
+API_KEY = ler_api_key()
+
+# Global variables
+count = 0
+display = ''
+word = ''
+already_guessed = []
+limit = 5
+
+def main():
+    global count, display, word, already_guessed, limit
+    word = get_random_word()
+    length = len(word)
+    count = 0
+    display = '_' * length
+    already_guessed = []
+    limit = 5
+
 def hangman(guess):
     global count, display, word, already_guessed, limit
     limit = 5
@@ -34,6 +52,41 @@ def hangman(guess):
         elif count == 5:
             return "   _____ \n" "  |     | \n" "  |     |\n" "  |     | \n" "  |     O \n" "  |    /|\ \n" "  |    / \ \n" "__|__\n"
 
+def draw_hangman(attempt_count):
+
+    visible_errors = 2
+    total_errors = attempt_count + visible_errors
+
+    hangman_array = [
+        '    --',
+        '    | ',
+        '    O ',
+        '    | ',
+        '   \\|/',
+        '    | ',
+        '   / \\'
+    ]
+    hangman_stick = [
+        '--|  ',
+        '  |  ',
+        '  |  ',
+        '  |  ',
+        '  |  ',
+        '  |  ',
+        ' _|__'
+    ]
+
+    hangman_status = ""
+    i = 0
+    for x in hangman_stick:
+        if i < total_errors:
+            hangman_status += hangman_array[i] + x + "\n"
+        else:
+            hangman_status += '      ' + x + "\n"
+        i += 1
+    
+    return hangman_status
+
 def get_random_word():
     try:
         with open('cars.txt', 'r') as file:
@@ -44,15 +97,6 @@ def get_random_word():
 
 # Start the bot
 bot = telebot.TeleBot(API_KEY)
-
-def main():
-    global count, display, word, already_guessed, limit
-    word = get_random_word()
-    length = len(word)
-    count = 0
-    display = '_' * length
-    already_guessed = []
-    limit = 5
 
 @bot.message_handler(commands=['start'])
 def start_ex(message):
@@ -70,8 +114,8 @@ def play_game(message):
     # Call the main function to get a new word
     main()
 
-    # Send the initial hangman status
-    bot.send_message(message.chat.id, f"Esta é a palavra Hangman ({len(word)} letras): {display} Digite seu palpite:")
+    initial_message = f"Esta é a palavra Hangman ({len(word)} letras): {display} Digite seu palpite:\n{draw_hangman(count)}"
+    bot.send_message(message.chat.id, initial_message)
 
 @bot.message_handler(func=lambda msg: msg.text.lower() == 'exit')
 def exit_game(message):
@@ -96,8 +140,13 @@ def make_guess(message):
     display = ''.join([letter if letter in already_guessed else '_' for letter in word])
 
     # Send hangman status
-    bot.send_message(message.chat.id, hangman(guess))
-    bot.send_message(message.chat.id, f"Esta é a palavra Hangman ({len(word)} letras): {display} Digite seu palpite:")
+    hangman_status = hangman(guess)
+    # Draw hangman status
+    hangman_drawing = draw_hangman(count)
+    # Combine the hangman status and drawing
+    combined_message = f"{hangman_status}\nEsta é a palavra Hangman ({len(word)} letras): {display} Digite seu palpite:\n{hangman_drawing}"
+
+    bot.send_message(message.chat.id, combined_message)
 
     # Check if the game is over
     if display == word:
