@@ -30,7 +30,7 @@ def hangman(guess):
     limit = 5
     guess = guess.strip()
 
-    if len(guess) == 0 or len(guess) >= 2 or guess <= "9":
+    if not guess.isalpha() or len(guess) != 1:
         return "Caractere errado, tente uma outra letra\n"
 
     elif guess in already_guessed:
@@ -40,17 +40,6 @@ def hangman(guess):
         count += 1
         already_guessed.extend([guess])
         time.sleep(1)
-
-        if count == 1:
-            return "   _____ \n" "  |      \n" "  |      \n" "  |      \n" "  |      \n" "  |      \n" "  |      \n" "__|__\n"
-        elif count == 2:
-            return "   _____ \n" "  |     | \n" "  |     |\n" "  |      \n" "  |      \n" "  |      \n" "  |      \n" "__|__\n"
-        elif count == 3:
-            return "   _____ \n" "  |     | \n" "  |     |\n" "  |     | \n" "  |      \n" "  |      \n" "  |      \n" "__|__\n"
-        elif count == 4:
-            return "   _____ \n" "  |     | \n" "  |     |\n" "  |     | \n" "  |     O \n" "  |      \n" "  |      \n" "__|__\n"
-        elif count == 5:
-            return "   _____ \n" "  |     | \n" "  |     |\n" "  |     | \n" "  |     O \n" "  |    /|\ \n" "  |    / \ \n" "__|__\n"
 
 def draw_hangman(attempt_count):
 
@@ -77,13 +66,8 @@ def draw_hangman(attempt_count):
     ]
 
     hangman_status = ""
-    i = 0
-    for x in hangman_stick:
-        if i < total_errors:
-            hangman_status += hangman_array[i] + x + "\n"
-        else:
-            hangman_status += '      ' + x + "\n"
-        i += 1
+    for i in range(len(hangman_array)):
+        hangman_status += hangman_array[i] + hangman_stick[i] + "\n" if i < total_errors else '      ' + hangman_stick[i] + "\n"
     
     return hangman_status
 
